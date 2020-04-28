@@ -1,1 +1,8 @@
+# OSX files
 .DS_Store
+
+# Python venv
+venv/
+
+# vscode config
+.vscode/
