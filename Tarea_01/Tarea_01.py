@@ -175,10 +175,26 @@ def apply_gamma_per_channel(img, gamma_per_channel):
     # Add text
     img_gamma_text = [put_text(text,ch) for text,ch in zip(text, img_gamma)]
     display = np.hstack(img_gamma_text)
+
     cv2.imshow(f"Gamma Correction", display)
     save_img(f"gamma.jpg", display)
 
     return cv2.merge(img_gamma)
+
+
+def apply_median(img, size):
+
+    channels = cv2.split(img)
+    median = [cv2.medianBlur(ch, size) for ch in channels]
+
+    text = ["Blue", "Green", "Red"]
+    display = [put_text(text,ch) for text,ch in zip(text, median)]
+
+    display = np.hstack(display)
+    cv2.imshow(f"Media filter {size}", display)
+    save_img(f"median_{size}.jpg", display)
+
+    return cv2.merge(median)
 
 
 def main():
@@ -219,15 +235,32 @@ def main():
     save_img(f"portrait_gamma.jpg", portrait_gamma)
 
     ####################################################################
-    # Q5:
+    # Q5: Apply median filter to each channel
+    portrait_media_3 = apply_median(portrait_gamma, 3)
+
+    portrait_media_5 = apply_median(portrait_gamma, 5)
 
     ####################################################################
-    # Q6:
+    # Q6: Combine Q3,Q4,Q5 in
+
+    # First display all three images
+    line_1 = np.vstack([portrait_eq, portrait_gamma])
+    line_2 = np.vstack([portrait_media_3, portrait_media_5])
+
+    display = np.hstack([line_1, line_2])
+    cv2.imshow(f"Image to combine", display)
+    save_img(f"combine.jpg", display)
 
 
+    img_1 = cv2.addWeighted(portrait_eq, 0.25, portrait_gamma, 0.25, 0)
+    img_2 = cv2.addWeighted(portrait_media_3, 0.25 ,portrait_media_5, 0.25, 0)
+
+    output_image = cv2.add(img_1, img_2)
+
+    cv2.imshow(f"Portrait - Output Image", output_image)
+    save_img(f"portrait_output.jpg", output_image)
 
     cv2.waitKey(0)
-
 
 
 if __name__ == '__main__':
