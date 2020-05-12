@@ -17,7 +17,7 @@ def put_text(text, img, text_color=(0, 0, 0)):
     new_image = img.copy()
 
     font = cv2.FONT_HERSHEY_SIMPLEX
-    bottomLeftCornerOfText = (10,30)
+    bottomLeftCornerOfText = (10, 30)
     fontScale = 1
     lineType = 2
 
@@ -59,58 +59,58 @@ def apply_median(img, size):
 
     channels = cv2.split(img)
     median = [cv2.medianBlur(ch, size) for ch in channels]
-    text = ["Blue", "Green", "Red"]
+    labels = ["Blue", "Green", "Red"]
 
-    for text,ch in zip(text, median):
+    for text, ch in zip(labels, median):
         cv2.imshow(f"Ch: {text} Median: {size}", ch)
 
     # Save image for document
-    display = [put_text(text,ch) for text,ch in zip(text, median)]
+    display = [put_text(text, ch) for text, ch in zip(labels, median)]
     display = np.hstack(display)
     save_img(f"median_{size}.jpg", display)
 
 
 def q1():
     img = load_image()
-    cv2.imshow(f"Retrato", img)
+    cv2.imshow("Retrato", img)
 
 
 def q2():
     img = load_image()
 
     channels = cv2.split(img)
-    text = ["Blue", "Green", "Red"]
+    labels = ["Blue", "Green", "Red"]
 
     # Display one window per channel
-    for text, ch in zip(text, channels):
+    for text, ch in zip(labels, channels):
         cv2.imshow(f'Canal {text}', ch)
 
     # Export single image for text
     # Put text to identify each image
-    channels = [put_text(text,ch) for text,ch in zip(text, channels)]
+    channels = [put_text(text, ch) for text, ch in zip(labels, channels)]
     channels = np.hstack(channels)
-    save_img(f"bgr.jpg", channels)
+    save_img("bgr.jpg", channels)
 
 
 def q3():
     img = load_image()
 
     channels = cv2.split(img)
-    text = ["Blue", "Green", "Red"]
+    labels = ["Blue", "Green", "Red"]
 
     channels_eq = list()
     for ch in channels:
         channels_eq.append(cv2.equalizeHist(ch))
 
     # Display one window per channel
-    for text, ch in zip(text, channels):
+    for text, ch in zip(labels, channels):
         cv2.imshow(f'Canal {text} Ecualizado', ch)
 
     # Export single image for text document
     # Put text to identify each image
-    channels_eq = [put_text(text,ch) for text,ch in zip(text, channels_eq)]
+    channels_eq = [put_text(text, ch) for text, ch in zip(labels, channels_eq)]
     channels_eq = np.hstack(channels_eq)
-    save_img(f"bgr_eq.jpg", channels_eq)
+    save_img("bgr_eq.jpg", channels_eq)
 
 
 def q4():
@@ -120,7 +120,7 @@ def q4():
     channels = cv2.split(img)
 
     # List of gammas to try
-    gammas = [x/10 for x in range(5,20)]
+    gammas = [x/10 for x in range(5, 20)]
     gamma_per_channel = {"B": [], "G": [], "R": []}
 
     for factor in gammas:
@@ -156,7 +156,9 @@ def q4():
     text = ["Blue", "Green", "Red"]
 
     for index in range(0, 3):
-        cv2.imshow(f'Canal {text[index]} | Factor Gamma: {gamma_per_channel[index]}', img_gamma[index])
+        cv2.imshow(
+            f'Canal {text[index]} | Factor Gamma: {gamma_per_channel[index]}',
+            img_gamma[index])
 
     # Export single image for text document
 
@@ -166,16 +168,16 @@ def q4():
         f"R|g={gamma_per_channel[2]}"]
 
     # Add text
-    img_gamma_text = [put_text(text,ch) for text,ch in zip(text, img_gamma)]
+    img_gamma_text = [put_text(text, ch) for text, ch in zip(text, img_gamma)]
     display = np.hstack(img_gamma_text)
 
-    save_img(f"gamma.jpg", display)
+    save_img("gamma.jpg", display)
 
 
 def q5():
     img = load_image()
-    portrait_media_3 = apply_median(img, 3)
-    portrait_media_5 = apply_median(img, 5)
+    apply_median(img, 3)
+    apply_median(img, 5)
 
 
 def q6():
@@ -204,10 +206,21 @@ def q6():
     img4 = cv2.merge(channels_median_5)
 
     img_12 = cv2.addWeighted(img1, 0.25, img2, 0.25, 0)
-    img_34 = cv2.addWeighted(img3, 0.25 ,img4, 0.25, 0)
+    img_34 = cv2.addWeighted(img3, 0.25, img4, 0.25, 0)
 
     output_image = cv2.add(img_12, img_34)
-    cv2.imshow(f"Retrato - Combinacion de 4 Imagenes", output_image)
+    cv2.imshow("Retrato - Combinacion de 4 Imagenes", output_image)
+
+    img1 = put_text("EQ.", img1)
+    img2 = put_text("Gamma", img2)
+    img3 = put_text("Median 3x3", img3)
+    img4 = put_text("Median 5x5", img4)
+    # Color images - Stack to diplay
+    row_1 = np.hstack([img1, img2])
+    row_2 = np.hstack([img3, img4])
+
+    img = np.vstack([row_1, row_2])
+    save_img("color_merge.jpg", img)
 
 
 def main(args):
@@ -218,7 +231,7 @@ def main(args):
         print("Wrong usage. Call using one of the following options:")
         for i in range(1, 7):
             print(f" * P{i}")
-        print(f" * ALL")
+        print(" * ALL")
         exit(1)
 
     args[1] = args[1].upper()
