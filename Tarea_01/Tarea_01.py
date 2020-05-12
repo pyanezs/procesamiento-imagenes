@@ -1,18 +1,18 @@
 # Libraries
 import os
 import cv2
-import gdown
+import sys
 import numpy as np
 
-from matplotlib import pyplot as plt
 from pathlib import Path
 
 # GLOBAL VARIABLES
 OUTPUT_DIR = "outs"
 INPUT_FILE = "portrait.jpg"
 
+
 # Custom Functions
-def put_text(text, img, text_color=(0,0,0)):
+def put_text(text, img, text_color=(0, 0, 0)):
     # https://stackoverflow.com/questions/16615662/how-to-write-text-on-a-image-in-windows-using-python-opencv2
     new_image = img.copy()
 
@@ -38,83 +38,9 @@ def save_img(filename, img):
     cv2.imwrite(out_file, img)
 
 
-def download_image():
-    # Image was downloaded from the following url.
-    # https://www.pexels.com/photo/women-s-white-and-black-button-up-collared-shirt-774909/
-    # For simplicity file was uploaded to Google Drive so is easier to reproduce
-    # the results from the code
-    url = "https://drive.google.com/uc?id=1kEp1hqSjFi_YDlFflEXPuU_G0cWANdXk"
-    gdown.download(url, INPUT_FILE, quiet=True)
-
-
-def load_and_show():
+def load_image():
     portrait = cv2.imread(INPUT_FILE)
-    cv2.imshow("Original Portrait", portrait)
     return portrait
-
-
-def display_channels(img):
-    channels = cv2.split(img)
-
-    # Put text to identify each image
-    text = ["Blue", "Green", "Red"]
-    channels = [put_text(text,ch) for text,ch in zip(text, channels)]
-
-    # Combine un single array
-    channels = np.hstack(channels)
-
-    # Display image
-    cv2.imshow('Image Channels', channels)
-
-    # Save image to file
-    save_img(f"bgr.jpg", channels)
-
-
-def channels_histogram(img, file):
-
-    plt.style.use('fast')
-    plt.title('Histograma por canal')
-
-    # Show graph
-    color = ('b','g','r')
-    for i,col in enumerate(color):
-        histr = cv2.calcHist([img], [i], None, [256], [0,256])
-        plt.plot(histr,color = col)
-        plt.xlim([0,256])
-    plt.show()
-
-    # Save graph
-    color = ('b','g','r')
-    for i,col in enumerate(color):
-        histr = cv2.calcHist([img], [i], None, [256], [0,256])
-        plt.plot(histr,color = col)
-        plt.xlim([0,256])
-
-    output_file = os.path.join(OUTPUT_DIR, f"{file}_hist")
-    plt.savefig(output_file)
-
-
-def equalize_channels(img):
-
-    channels = cv2.split(img)
-
-    channels_eq = list()
-    for ch in channels:
-        channels_eq.append(cv2.equalizeHist(ch))
-
-    img_eq = cv2.merge(channels_eq)
-
-    # Put text to identify each image
-    text = ["Blue", "Green", "Red"]
-    channels_eq = [put_text(text,ch) for text,ch in zip(text, channels_eq)]
-
-    channels_eq = np.hstack(channels_eq)
-
-    # Display and save image
-    cv2.imshow('Portrait Channels Equalized', channels_eq)
-    save_img(f"bgr_eq.jpg", channels_eq)
-
-    return img_eq
 
 
 def gamma_correction(img, factor):
@@ -129,14 +55,72 @@ def gamma_correction(img, factor):
     return np.uint8(img * 255)
 
 
-def apply_multiple_gammas(img):
+def apply_median(img, size):
+
+    channels = cv2.split(img)
+    median = [cv2.medianBlur(ch, size) for ch in channels]
+    text = ["Blue", "Green", "Red"]
+
+    for text,ch in zip(text, median):
+        cv2.imshow(f"Ch: {text} Median: {size}", ch)
+
+    # Save image for document
+    display = [put_text(text,ch) for text,ch in zip(text, median)]
+    display = np.hstack(display)
+    save_img(f"median_{size}.jpg", display)
+
+
+def q1():
+    img = load_image()
+    cv2.imshow(f"Retrato", img)
+
+
+def q2():
+    img = load_image()
+
+    channels = cv2.split(img)
+    text = ["Blue", "Green", "Red"]
+
+    # Display one window per channel
+    for text, ch in zip(text, channels):
+        cv2.imshow(f'Canal {text}', ch)
+
+    # Export single image for text
+    # Put text to identify each image
+    channels = [put_text(text,ch) for text,ch in zip(text, channels)]
+    channels = np.hstack(channels)
+    save_img(f"bgr.jpg", channels)
+
+
+def q3():
+    img = load_image()
+
+    channels = cv2.split(img)
+    text = ["Blue", "Green", "Red"]
+
+    channels_eq = list()
+    for ch in channels:
+        channels_eq.append(cv2.equalizeHist(ch))
+
+    # Display one window per channel
+    for text, ch in zip(text, channels):
+        cv2.imshow(f'Canal {text} Ecualizado', ch)
+
+    # Export single image for text document
+    # Put text to identify each image
+    channels_eq = [put_text(text,ch) for text,ch in zip(text, channels_eq)]
+    channels_eq = np.hstack(channels_eq)
+    save_img(f"bgr_eq.jpg", channels_eq)
+
+
+def q4():
+    img = load_image()
 
     # Split image per channels
     channels = cv2.split(img)
 
     # List of gammas to try
     gammas = [x/10 for x in range(5,20)]
-
     gamma_per_channel = {"B": [], "G": [], "R": []}
 
     for factor in gammas:
@@ -158,14 +142,23 @@ def apply_multiple_gammas(img):
 
         save_img(f"gamma_{channel}.jpg", display)
 
+    # After manually inspecting the previous result the following gammas were
+    # selected
+    gamma_per_channel = [0.8, 0.9, 1.2]
 
-def apply_gamma_per_channel(img, gamma_per_channel):
     # Split image per channels
     channels = cv2.split(img)
 
     img_gamma = [
         gamma_correction(ch, factor)
         for ch, factor in zip(channels, gamma_per_channel)]
+
+    text = ["Blue", "Green", "Red"]
+
+    for index in range(0, 3):
+        cv2.imshow(f'Canal {text[index]} | Factor Gamma: {gamma_per_channel[index]}', img_gamma[index])
+
+    # Export single image for text document
 
     text = [
         f"B|g={gamma_per_channel[0]}",
@@ -176,92 +169,86 @@ def apply_gamma_per_channel(img, gamma_per_channel):
     img_gamma_text = [put_text(text,ch) for text,ch in zip(text, img_gamma)]
     display = np.hstack(img_gamma_text)
 
-    cv2.imshow(f"Gamma Correction", display)
     save_img(f"gamma.jpg", display)
 
-    return cv2.merge(img_gamma)
+
+def q5():
+    img = load_image()
+    portrait_media_3 = apply_median(img, 3)
+    portrait_media_5 = apply_median(img, 5)
 
 
-def apply_median(img, size):
-
+def q6():
+    img = load_image()
     channels = cv2.split(img)
-    median = [cv2.medianBlur(ch, size) for ch in channels]
 
-    text = ["Blue", "Green", "Red"]
-    display = [put_text(text,ch) for text,ch in zip(text, median)]
+    # Equalize channels
+    channels_eq = list()
+    for ch in channels:
+        channels_eq.append(cv2.equalizeHist(ch))
 
-    display = np.hstack(display)
-    cv2.imshow(f"Media filter {size}", display)
-    save_img(f"median_{size}.jpg", display)
+    # Apply gamma correctionn
+    gamma_per_channel = [0.8, 0.9, 1.2]
+    channels_gamma = [
+        gamma_correction(ch, factor)
+        for ch, factor in zip(channels, gamma_per_channel)]
 
-    return cv2.merge(median)
+    # Median filter
+    channels_median_3 = [cv2.medianBlur(ch, 3) for ch in channels]
+    channels_median_5 = [cv2.medianBlur(ch, 5) for ch in channels]
+
+    # Merge channles of each process
+    img1 = cv2.merge(channels_eq)
+    img2 = cv2.merge(channels_gamma)
+    img3 = cv2.merge(channels_median_3)
+    img4 = cv2.merge(channels_median_5)
+
+    img_12 = cv2.addWeighted(img1, 0.25, img2, 0.25, 0)
+    img_34 = cv2.addWeighted(img3, 0.25 ,img4, 0.25, 0)
+
+    output_image = cv2.add(img_12, img_34)
+    cv2.imshow(f"Retrato - Combinacion de 4 Imagenes", output_image)
 
 
-def main():
+def main(args):
     # Create ouput dir
     Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-    ####################################################################
-    # Q1: Download image and load using opencv
-    download_image()
-    portrait = load_and_show()
+    if len(args) != 2:
+        print("Wrong usage. Call using one of the following options:")
+        for i in range(1, 7):
+            print(f" * P{i}")
+        print(f" * ALL")
+        exit(1)
 
-    ####################################################################
-    # Q2: Display image channels
-    display_channels(portrait)
-
-    ####################################################################
-    # Q3: Equalize histograms
-    channels_histogram(portrait, "orig")
-    portrait_eq = equalize_channels(portrait)
-    channels_histogram(portrait_eq, "eq")
-
-    ####################################################################
-    # Q4: Apply gamma
-
-    # Apply a gamma function with a range of values.
-    # Results are written per channen on file
-    apply_multiple_gammas(portrait)
-
-    # After seeing the results of the previous step
-    # we choose the following factors for each of the channels
-    b_factor = 0.8
-    g_factor = 0.9
-    r_factor = 1.2
-
-    portrait_gamma = apply_gamma_per_channel(portrait, [b_factor, g_factor, r_factor])
-
-    cv2.imshow(f"Portrait - Post Gamma Correction", portrait_gamma)
-    save_img(f"portrait_gamma.jpg", portrait_gamma)
-
-    ####################################################################
-    # Q5: Apply median filter to each channel
-    portrait_media_3 = apply_median(portrait_gamma, 3)
-
-    portrait_media_5 = apply_median(portrait_gamma, 5)
-
-    ####################################################################
-    # Q6: Combine Q3,Q4,Q5 in
-
-    # First display all three images
-    line_1 = np.vstack([portrait_eq, portrait_gamma])
-    line_2 = np.vstack([portrait_media_3, portrait_media_5])
-
-    display = np.hstack([line_1, line_2])
-    cv2.imshow(f"Image to combine", display)
-    save_img(f"combine.jpg", display)
-
-
-    img_1 = cv2.addWeighted(portrait_eq, 0.25, portrait_gamma, 0.25, 0)
-    img_2 = cv2.addWeighted(portrait_media_3, 0.25 ,portrait_media_5, 0.25, 0)
-
-    output_image = cv2.add(img_1, img_2)
-
-    cv2.imshow(f"Portrait - Output Image", output_image)
-    save_img(f"portrait_output.jpg", output_image)
+    args[1] = args[1].upper()
+    # Main program
+    if args[1] == "P1":
+        q1()
+    elif args[1] == "P2":
+        q2()
+    elif args[1] == "P3":
+        q3()
+    elif args[1] == "P4":
+        q4()
+    elif args[1] == "P5":
+        q5()
+    elif args[1] == "P6":
+        q6()
+    elif args[1] == "ALL":
+        q1()
+        q2()
+        q3()
+        q4()
+        q5()
+        q6()
+    else:
+        print("Wrong usage. Call using one of the following options:")
+        for i in range(1, 7):
+            print(f" * P{i}")
 
     cv2.waitKey(0)
 
 
 if __name__ == '__main__':
-    main()
+    exit(main(sys.argv))
