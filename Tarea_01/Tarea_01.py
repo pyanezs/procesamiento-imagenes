@@ -3,6 +3,7 @@ import os
 import cv2
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 
 from pathlib import Path
 
@@ -81,6 +82,13 @@ def q2():
     channels = cv2.split(img)
     labels = ["Blue", "Green", "Red"]
 
+    # Histograms
+    for text, ch in zip(labels, channels):
+        counts, bins = np.histogram(ch, bins=250)
+        plt.figure()
+        plt.hist(bins[:-1], bins, weights=counts)
+        plt.savefig(os.path.join(OUTPUT_DIR, f"hist_{text}.png"))
+
     # Display one window per channel
     for text, ch in zip(labels, channels):
         cv2.imshow(f'Canal {text}', ch)
@@ -101,6 +109,13 @@ def q3():
     channels_eq = list()
     for ch in channels:
         channels_eq.append(cv2.equalizeHist(ch))
+
+    # Histograms
+    for text, ch in zip(labels, channels_eq):
+        counts, bins = np.histogram(ch, bins=250)
+        plt.figure()
+        plt.hist(bins[:-1], bins, weights=counts)
+        plt.savefig(os.path.join(OUTPUT_DIR, f"hist_{text}_eq.png"))
 
     # Display one window per channel
     for text, ch in zip(labels, channels):
@@ -139,8 +154,11 @@ def q4():
         line_3 = np.hstack(gamma[10:15])
 
         display = np.vstack([line_1, line_2, line_3])
-
         save_img(f"gamma_{channel}.jpg", display)
+
+        line_1 = np.hstack([gamma[0], gamma[5], gamma[7], gamma[13], gamma[14]])
+        save_img(f"gamma_{channel}_simple.jpg", line_1)
+
 
     # After manually inspecting the previous result the following gammas were
     # selected
@@ -205,22 +223,26 @@ def q6():
     img3 = cv2.merge(channels_median_3)
     img4 = cv2.merge(channels_median_5)
 
-    img_12 = cv2.addWeighted(img1, 0.25, img2, 0.25, 0)
-    img_34 = cv2.addWeighted(img3, 0.25, img4, 0.25, 0)
+    img_12 = cv2.addWeighted(img1, 0.35, img2, 0.35, 0)
+    img_34 = cv2.addWeighted(img3, 0.15, img4, 0.15, 0)
 
     output_image = cv2.add(img_12, img_34)
     cv2.imshow("Retrato - Combinacion de 4 Imagenes", output_image)
+    save_img("final.jpg", output_image)
+
+    after = put_text("Final", output_image)
+    before = put_text("Original", img)
+    before_after = np.hstack([before, after])
+    save_img("before_after.jpg", before_after)
 
     img1 = put_text("EQ.", img1)
     img2 = put_text("Gamma", img2)
     img3 = put_text("Median 3x3", img3)
     img4 = put_text("Median 5x5", img4)
     # Color images - Stack to diplay
-    row_1 = np.hstack([img1, img2])
-    row_2 = np.hstack([img3, img4])
+    row = np.hstack([img1, img2, img3, img4])
 
-    img = np.vstack([row_1, row_2])
-    save_img("color_merge.jpg", img)
+    save_img("color_merge.jpg", row)
 
 
 def main(args):
