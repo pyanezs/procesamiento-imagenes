@@ -12,29 +12,18 @@
 \usepackage{amssymb}
 \usepackage{amsxtra}
 \usepackage{mathrsfs}
-\usepackage{xfrac}
-\usepackage{graphicx}
-\usepackage{psfrag}
-\usepackage{xcolor}
 \usepackage{array}
 \usepackage{cite}
 \usepackage{varioref}
-\usepackage{multicol}
 \usepackage{float}
-\usepackage{rotate}
 \usepackage{color}
 \usepackage{colortbl}
 \usepackage{enumerate}
-\usepackage[active]{srcltx}
 \usepackage{rotating}
 \usepackage{caption}
 \usepackage{subcaption}
-\usepackage{balance}
-\usepackage{times}
 \usepackage{hyperref}
-\usepackage{afterpage}
 \usepackage{listings}
-\usepackage{cancel}
 \usepackage{lipsum}
 \usepackage{flushend}
 
@@ -48,8 +37,8 @@
 
 % Levels to show in table of contents:
 % \setcounter{tocdepth}{-1} % only parts
-\setcounter{tocdepth}{0}  % only parts and chapters
-% \setcounter{tocdepth}{1}  % part,chapters,sections
+% \setcounter{tocdepth}{0}  % only parts and chapters
+\setcounter{tocdepth}{1}  % part,chapters,sections
 % \setcounter{tocdepth}{2}  % part,chapters,sections, subsections
 % \setcounter{tocdepth}{3}  % part,chapters,sections, subsections,subsubsections
 % \setcounter{tocdepth}{4}  % part,chapters,sections, subsections,subsubsections and paragraphs
@@ -61,7 +50,16 @@
 
 \maketitle
 
+\begin{abstract}
+We propose \lipsum[1]
+\end{abstract}
+
 \tableofcontents
+
+% \listoffigures
+
+% \listoftables
+
 
 \section{Seccion 1}
 \lipsum[1]
@@ -90,6 +88,18 @@
 
 \lipsum[1]
 
+\begin{table} \caption{A Simple Example Table} \label{table_example}
+  \begin{center}
+    \begin{tabular}{c c}
+      \hline
+      \bfseries First & \bfseries Next\\ \hline\hline
+      1.0 & 2.0 \\
+      \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+
 \section{Seccion 3}
 
 
@@ -102,6 +112,12 @@
 \lipsum[1]
 
 \section{Seccion 6}
+
+\begin{lstlisting}[language=bash]
+  $ wget http://tex.stackexchange.com
+\end{lstlisting}
+
+
 \lipsum[1]
 
 \section{Seccion 7}
