@@ -6,3 +6,5 @@
 *.out
 *.fls
 *.fdb_latexmk
+outs/
+.texpadtmp/

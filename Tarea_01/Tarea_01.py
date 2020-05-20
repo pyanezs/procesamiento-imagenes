@@ -135,7 +135,7 @@ def q4():
     channels = cv2.split(img)
 
     # List of gammas to try
-    gammas = [x/10 for x in range(5, 20)]
+    gammas = [x/10 for x in range(5, 50)]
     gamma_per_channel = {"B": [], "G": [], "R": []}
 
     for factor in gammas:

@@ -1,10 +1,12 @@
 import cv2
 
-lena= cv2.imread('lena.png')
+lena = cv2.imread(
+    '/Users/pyanezs/Documents/procesamiento-imagenes/Fotos/lena.png')
 gray1 = cv2.cvtColor(lena, cv2.COLOR_BGR2GRAY)
 print(gray1.shape)
 
-barbara= cv2.imread('barbara_gray.bmp')
+barbara = cv2.imread(
+    '/Users/pyanezs/Documents/procesamiento-imagenes/Fotos/barbara_gray.bmp')
 gray2 =  cv2.cvtColor(barbara, cv2.COLOR_BGR2GRAY)
 print(gray2.shape)
 
