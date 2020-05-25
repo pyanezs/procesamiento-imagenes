@@ -11,7 +11,6 @@ y= np.linspace(-2*fc+1, 2*fc, 256)
 X, Y = np.meshgrid(x,y)
 print(X)
 
-
 Z = 1/ (1+(np.power(np.sqrt(np.power(X,2)+np.power(Y,2))/fc,2*N)))
 print (Z.shape)
 
@@ -22,7 +21,7 @@ ax.plot_surface(X, Y, Z, cmap=cm.Spectral)
 plt.show()
 
 
-img = cv2.imread('cameraman.png')
+img = cv2.imread('/Users/pyanezs/Documents/procesamiento-imagenes/Fotos/cameraman.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 F = np.fft.fft2(gray)

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-img = cv2.imread('cameraman.png')
+img = cv2.imread('/Users/pyanezs/Documents/procesamiento-imagenes/Fotos/cameraman.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 r=40
