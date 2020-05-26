@@ -93,7 +93,8 @@ def pregunta_1():
     show_save_spectrum(
         spectrum,
         f'Espectro Imagen',
-        os.path.join(wd, "puente_fft.png"))
+        os.path.join(wd, "puente_fft.png"),
+        cmap=cm.Spectral)
 
 
 def gen_noise(freq, dim):
@@ -133,9 +134,7 @@ def pregunta_2():
         # Espectro imagen
         fft_img = np.fft.fft2(img)
         fshift = np.fft.fftshift(fft_img)
-        spectrum = np.log(0.1 * np.abs(1 + fshift))
-        # spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
-        # spectrum = np.uint8(spectrum * 255)
+        spectrum = np.log(np.abs(fshift))
 
         show_save_spectrum(
             spectrum,
