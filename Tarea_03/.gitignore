@@ -8,3 +8,6 @@
 *.log
 *.out
 *.toc
+outs_1/
+outs_2/
+outs/

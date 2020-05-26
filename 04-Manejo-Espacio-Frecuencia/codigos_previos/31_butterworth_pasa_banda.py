@@ -21,7 +21,7 @@ y= np.linspace(-2*fc, 2*fc, 256)
 X, Y = np.meshgrid(x,y)
 
 H1 = 1/ (1+(np.power(np.sqrt(np.power(X,2)+np.power(Y,2))/fa,2*N)))
-H2 = 1- 1/ (1+(np.power(np.sqrt(np.power(X,2)+np.power(Y,2))/fb,2*N)))
+H2 = 1- l/ (1+(np.power(np.sqrt(np.power(X,2)+np.power(Y,2))/fb,2*N)))
 
 Z = H1 * H2
 fig = plt.figure()

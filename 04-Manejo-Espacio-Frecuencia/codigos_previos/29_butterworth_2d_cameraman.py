@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-fc=28  # Frecuencia de corte
-N= 3   # orden del filtro
+fc = 28  # Frecuencia de corte
+N = 3   # orden del filtro
 
 x= np.linspace(-2*fc+1, 2*fc, 256)
 y= np.linspace(-2*fc+1, 2*fc, 256)
@@ -23,6 +23,7 @@ plt.show()
 
 img = cv2.imread('/Users/pyanezs/Documents/procesamiento-imagenes/Fotos/cameraman.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+cv2.imshow('Input', gray)
 
 F = np.fft.fft2(gray)
 FS = np.fft.fftshift(F)

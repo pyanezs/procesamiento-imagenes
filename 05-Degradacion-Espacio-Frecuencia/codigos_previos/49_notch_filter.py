@@ -6,17 +6,17 @@ from matplotlib import cm
 import matplotlib.image as mpimg
 
 def btw_pts(x,y,M,N,n,fc):
-# Aplicacion del filtro Butterworth 
-# en una posicion especifica
+    # Aplicacion del filtro Butterworth
+    # en una posicion especifica
 
-# x: posicion en x (fila)
-# y: posicion en y (columna)
-# M: filas de la imagen
-# N: columnas de la imagen
-# n: orden del filtro
-# fc: frecuencia de corte
-# Calculo de la malla
- 
+    # x: posicion en x (fila)
+    # y: posicion en y (columna)
+    # M: filas de la imagen
+    # N: columnas de la imagen
+    # n: orden del filtro
+    # fc: frecuencia de corte
+    # Calculo de la malla
+
     vx=np.linspace(-M/2, M/2, M)
     vy=np.linspace(-N/2, N/2, N)
     U,V=np.meshgrid(vy,vx)
@@ -26,10 +26,10 @@ def btw_pts(x,y,M,N,n,fc):
     # para cada punto de la lista
     print(len(x))
     for i in range(0, len(x)):
-        
+
         #filtro de butterworth centrado
         H = 1- 1/(1+ (f/fc)**(2*n))
-     
+
         # Movemos el punto del centro
         # a la posicion deseada
         a= x[i]- M/2
@@ -43,8 +43,10 @@ def btw_pts(x,y,M,N,n,fc):
     res= 1-T
     return (res)
 
+
 #programa principal
-img = cv2.imread('noiseball.png')
+img = cv2.imread(
+    '/Users/pyanezs/Documents/procesamiento-imagenes/Fotos/noiseball.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 gray = cv2.normalize(gray.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
@@ -87,7 +89,7 @@ for i in range(a, m-a):
     for j in range(b, n-b):
         wg= np.zeros([2*a, 2*b])
         wn= np.zeros([2*a, 2*b])
-       
+
         #ventanas
         wg  = m_g[-a+i:a+i,-b+j:b+j]
         wn  = m_nu[-a+i:a+i,-b+j:b+j]

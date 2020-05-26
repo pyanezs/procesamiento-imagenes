@@ -11,7 +11,7 @@ import itertools
 from pathlib import Path
 
 # GLOBAL VARIABLES
-OUTPUT_DIR = "outs"
+OUTPUT_DIR = "outs_1"
 INPUT_FILE = "puente.jpg"
 
 # Custom Functions
@@ -70,6 +70,7 @@ def show_save_spectrum(spectrum, title, out_file, save_only=False, cmap = "gray"
 def pregunta_1():
     '''P1: Despliega imagen seleccionada'''
     wd = os.path.join(OUTPUT_DIR, "p1")
+    Path(wd).mkdir(parents=True, exist_ok=True)
 
     # Imagen original
     img = load_image()
@@ -108,7 +109,6 @@ def pregunta_2():
     '''P2: Agrega ruido a las imagenes'''
     for freq in [10, 50, 80]:
         wd = os.path.join(OUTPUT_DIR, "p2", str(freq))
-        # Carpeta de resultados
         Path(wd).mkdir(parents=True, exist_ok=True)
 
         # Carga y normaliza imagen
@@ -136,8 +136,9 @@ def pregunta_2():
         fshift = np.fft.fftshift(fft_img)
         spectrum = np.log(np.abs(fshift))
 
+        trim = 256 - freq - 20
         show_save_spectrum(
-            spectrum,
+            spectrum[trim:-trim, trim:-trim],
             f'Ruido {freq} Hz',
             os.path.join(wd, "puente_fft.png"),
             cmap = cm.Spectral)
@@ -217,21 +218,6 @@ def pregunta_3():
         out_file = os.path.join(
             wd, f"puente_N{str(filter_order).zfill(2)}.png")
         cv2.imwrite(out_file, new_img)
-
-
-def get_modified_image():
-    '''Añade el ruido indicado en el enunciado'''
-
-    img = load_section()
-    img_orig = img.copy()
-
-    m = img.shape[0]
-    delta = 15
-    V = np.fix(np.linspace(delta, m - delta, delta)).astype('uint8')
-    img[V, :] = img[V, :] + 50
-    img[:, V] = img[:, V] + 50
-
-    return img, img_orig
 
 
 def main(args):
