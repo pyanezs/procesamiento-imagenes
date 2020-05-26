@@ -39,8 +39,8 @@ def put_text(text, img, text_color=(0, 0, 0)):
 def save_img(filename, img):
     '''Guarda imagen a archivo en carpeta de salida'''
 
-    out_file = os.path.join(OUTPUT_DIR, filename)
-    cv2.imwrite(out_file, image_0_to_256(img))
+    out_file = f"{OUTPUT_DIR}/{filename}"
+    cv2.imwrite(out_file, img)
 
 
 def load_image():
@@ -94,14 +94,16 @@ def pregunta_1():
     img = load_section()
     cv2.imshow("Area Seleccionada", img)
     print(f"Dimensiones seccion a utilizar {img.shape}")
-    save_img("01_puente.jpg", img)
+    save_img("p1/puente.jpg", img)
 
     # Espectro imagen
-    spectrum = get_image_spectrum(img)
+    _, spectrum = get_image_fft_and_spectrum(img)
+    spectrum = np.uint8(spectrum * 255)
+
     cv2.imshow('Image spectrum', spectrum)
 
     # Guarda archivo con espectro
-    save_img("01_puente_fft.jpg", spectrum)
+    save_img("p1/puente_fft.jpg", spectrum)
 
 
 def gen_noise(freq, dim):
@@ -116,6 +118,10 @@ def pregunta_2():
     freqs = [10, 50, 80]
 
     for freq in freqs:
+
+        # Carpeta de resultados
+        Path(f"{OUTPUT_DIR}/p2/noise_{freq}").mkdir(parents=True, exist_ok=True)
+
         # Carga y normaliza imagen
         img = load_section()
         img = cv2.normalize(
@@ -133,14 +139,15 @@ def pregunta_2():
         # Denormaliza y guarda a archivo
         img = cv2.normalize(img.astype('float'), None, 0, 256, cv2.NORM_MINMAX)
         img = np.uint8(img)
-        save_img(f"02_f{freq}.jpg", img)
+        save_img(f"/p2/noise_{freq}/puente.jpg", img)
 
         # Espectro imagen
         fft, spectrum = get_image_fft_and_spectrum(img)
+        spectrum = np.uint8(spectrum * 255)
         cv2.imshow('Image spectrum', spectrum)
 
         # Guarda archivo con espectro
-        save_img(f"02_f{freq}_fft.jpg", spectrum)
+        save_img(f"/p2/noise_{freq}/puente_fft.jpg", spectrum)
 
 
 def butterworh_lp(X, Y, fc, n):
@@ -153,6 +160,9 @@ def pregunta_3():
 
     filter_order = 3
     for freq in freqs:
+
+        Path(f"{OUTPUT_DIR}/p3/noise_{freq}").mkdir(parents=True, exist_ok=True)
+
         # Carga y normaliza imagen
         img = load_section()
         img = cv2.normalize(
@@ -195,8 +205,10 @@ def pregunta_3():
 
             img_filtered_ftt = band_stop * img_fft
             spectrum = 0.1*np.log(1 + np.abs(img_filtered_ftt))
+            spectrum = np.uint8(spectrum * 255)
+
             save_img(
-                f"03_fft_f{freq}_N{str(filter_order).zfill(2)}.jpg",
+                f"p3/noise_{freq}/puente_fft_N{str(filter_order).zfill(2)}.jpg",
                 spectrum)
 
             img_filtered = np.fft.ifft2(np.fft.fftshift(img_filtered_ftt))
@@ -211,31 +223,73 @@ def pregunta_3():
                 f"Imagen Filtrada | f: {freq}[Hz] | N: {filter_order}",
                 img_filtered)
 
+            img_filtered = np.uint8(img_filtered * 255)
             save_img(
-                f"03_f{freq}_N{str(filter_order).zfill(2)}.jpg",
+                f"p3/noise_{freq}/puente_N{str(filter_order).zfill(2)}.jpg",
                 img_filtered)
 
+
+def get_modified_image():
+    '''Añade el ruido indicado en el enunciado'''
+
+    img = load_section()
+    img_orig = img.copy()
+
+    m = img.shape[0]
+    delta = 15
+    V = np.fix(np.linspace(delta, m - delta, delta)).astype('uint8')
+    img[V, :] = img[V, :] + 50
+    img[:, V] = img[:, V] + 50
+
+    return img, img_orig
 
 
 def main(args):
     '''Main'''
     # Directorio de salida
-    Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+    Path(f"{OUTPUT_DIR}/p1").mkdir(parents=True, exist_ok=True)
+    Path(f"{OUTPUT_DIR}/p2").mkdir(parents=True, exist_ok=True)
+    Path(f"{OUTPUT_DIR}/p3").mkdir(parents=True, exist_ok=True)
+    Path(f"{OUTPUT_DIR}/p4").mkdir(parents=True, exist_ok=True)
 
     # pregunta_1()
-
     # pregunta_2()
-
-    pregunta_3()
-
-    #############################
-
-
+    # pregunta_3()
 
     #############################
+    # Pregunta 4
+    img, img_orig = get_modified_image()
+    cv2.imshow('Imagen con ruido segun instrucciones', img)
+    save_img("p4/img_noise.jpg", img)
+
+    # Espectro y fft de la imagen
+    img_fft, spectrum = get_image_fft_and_spectrum(img)
+    spectrum = np.uint8(spectrum * 255)
+
+    cv2.imshow('Espectro imagen con ruido', spectrum)
+    save_img("p4/img_noise_fft.jpg", spectrum)
+
+    # Diffence of spectrums
+    img_fft_orig, spectrum_orig = get_image_fft_and_spectrum(img_orig)
+
+    diff = cv2.normalize(
+        abs(- img_fft_orig + img_fft),
+        None,
+        0.0,
+        1.0,
+        cv2.NORM_MINMAX)
+
+    print(diff)
+    cv2.imshow('Diffs ffts', diff)
+
+    print(diff)
+    # cv2.imshow('Diff spectrums', diff)
 
 
-    cv2.waitKey()
+
+
+
+
 
     # Display image
 
