@@ -50,11 +50,11 @@ def load_section():
     return img[0:512, h_offset:(h_offset + 512)]
 
 
-def show_save_spectrum(spectrum, title, out_file, save_only=False):
+def show_save_spectrum(spectrum, title, out_file, save_only=False, cmap = "gray"):
 
     fig = plt.figure()
     plt.title(title)
-    plt.imshow(spectrum, cmap="gray")
+    plt.imshow(spectrum, cmap=cmap)
     plt.savefig(out_file)
     plt.close('all')
 
@@ -63,7 +63,7 @@ def show_save_spectrum(spectrum, title, out_file, save_only=False):
 
     fig = plt.figure()
     plt.title(title)
-    plt.imshow(spectrum, cmap="gray")
+    plt.imshow(spectrum, cmap=cmap)
     plt.show()
 
 
@@ -133,14 +133,15 @@ def pregunta_2():
         # Espectro imagen
         fft_img = np.fft.fft2(img)
         fshift = np.fft.fftshift(fft_img)
-        spectrum = np.log(np.abs(fshift))
-        spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
-        spectrum = np.uint8(spectrum * 255)
+        spectrum = np.log(0.1 * np.abs(1 + fshift))
+        # spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
+        # spectrum = np.uint8(spectrum * 255)
 
         show_save_spectrum(
             spectrum,
             f'Ruido {freq} Hz',
-            os.path.join(wd, "puente_fft.png"))
+            os.path.join(wd, "puente_fft.png"),
+            cmap = cm.Spectral)
 
 
 def butterworh_lp(X, Y, fc, n, X0=0, Y0=0):
