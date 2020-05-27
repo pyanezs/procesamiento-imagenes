@@ -67,6 +67,34 @@ def show_save_spectrum(spectrum, title, out_file, save_only=False, cmap = "gray"
     plt.show()
 
 
+def gen_noise(freq, dim):
+    '''Genera ruido de la frecuencia y tamaño especficado'''
+    values = np.linspace(0, 1, num=dim)
+    noise = 0.1 * np.sin(2 * np.pi * freq * values)
+    return np.matlib.repmat(noise, dim, 1)
+
+
+def butterworh_lp(X, Y, fc, n, X0=0, Y0=0):
+    '''Filtro Butterworh'''
+    return (1 / (1 + (np.power(np.sqrt((X - X0) ** 2 + (Y - Y0) ** 2) / fc, 2 * n))))
+
+
+def band_stop_filter(X, Y, fc1, fc2, n, X0=0, Y0=0):
+
+    # Primer Filtro: Pasabajos invertido -> High Pass
+    high_pass = 1 - butterworh_lp(X, Y, fc1, n, X0, Y0)
+
+    # Segundo Filtro: Low-Pass
+    low_pass = butterworh_lp(X, Y, fc2, n, X0, Y0)
+
+    # Mezclar ambos filtros -> Band-stop
+    band_stop = 1 - high_pass * low_pass
+    band_stop = band_stop - np.min(band_stop)
+    band_stop = band_stop / np.max(band_stop)
+
+    return band_stop
+
+
 def pregunta_1():
     '''P1: Despliega imagen seleccionada'''
     wd = os.path.join(OUTPUT_DIR, "p1")
@@ -98,16 +126,9 @@ def pregunta_1():
         cmap=cm.Spectral)
 
 
-def gen_noise(freq, dim):
-    '''Genera ruido de la frecuencia y tamaño especficado'''
-    values = np.linspace(0, 1, num=dim)
-    noise = 0.1 * np.sin(2 * np.pi * freq * values)
-    return np.matlib.repmat(noise, dim, 1)
-
-
 def pregunta_2():
     '''P2: Agrega ruido a las imagenes'''
-    for freq in [10, 50, 80]:
+    for freq in [10, 50, 80, 500]:
         wd = os.path.join(OUTPUT_DIR, "p2", str(freq))
         Path(wd).mkdir(parents=True, exist_ok=True)
 
@@ -136,33 +157,18 @@ def pregunta_2():
         fshift = np.fft.fftshift(fft_img)
         spectrum = np.log(np.abs(fshift))
 
-        trim = 256 - freq - 20
         show_save_spectrum(
-            spectrum[trim:-trim, trim:-trim],
+            spectrum,
             f'Ruido {freq} Hz',
             os.path.join(wd, "puente_fft.png"),
             cmap = cm.Spectral)
 
-
-def butterworh_lp(X, Y, fc, n, X0=0, Y0=0):
-    '''Filtro Butterworh'''
-    return (1 / (1 + (np.power(np.sqrt((X - X0) ** 2 + (Y - Y0) ** 2) / fc, 2 * n))))
-
-
-def band_stop_filter(X, Y, fc1, fc2, n, X0 = 0, Y0 = 0):
-
-    # Primer Filtro: Pasabajos invertido -> High Pass
-    high_pass = 1 - butterworh_lp(X, Y, fc1, n, X0, Y0)
-
-    # Segundo Filtro: Low-Pass
-    low_pass = butterworh_lp(X, Y, fc2, n, X0, Y0)
-
-    # Mezclar ambos filtros -> Band-stop
-    band_stop = 1 - high_pass * low_pass
-    band_stop = band_stop - np.min(band_stop)
-    band_stop = band_stop / np.max(band_stop)
-
-    return band_stop
+        trim = 256 - freq - 20
+        show_save_spectrum(
+            spectrum[trim:-trim, trim:-trim],
+            f'Ruido {freq} Hz',
+            os.path.join(wd, "puente_fft_seccion.png"),
+            cmap = cm.Spectral)
 
 
 def pregunta_3():
@@ -223,29 +229,27 @@ def pregunta_3():
 def main(args):
     '''Main'''
 
-    if len(args) != 2:
+    options = ["ALL", "P1", "P2", "P3"]
+
+    if len(args) != 2 or args[1].upper() not in options:
         print("Wrong usage. Call using one of the following options:")
-        for i in range(1, 4):
-            print(f" * P{i}")
-        print(" * ALL")
+        for option in options:
+            print(f" * {option}")
         exit(1)
 
+    # Convertir entrada a mayusculas
     args[1] = args[1].upper()
+
     # Main program
-    if args[1] == "P1":
+    if args[1] in ["P1", "ALL"]:
         pregunta_1()
-    elif args[1] == "P2":
+
+    if args[1] in ["P2", "ALL"]:
         pregunta_2()
-    elif args[1] == "P3":
+
+    if args[1] in ["P3", "ALL"]:
         pregunta_3()
-    elif args[1] == "ALL":
-        pregunta_1()
-        pregunta_2()
-        pregunta_3()
-    else:
-        print("Wrong usage. Call using one of the following options:")
-        for i in range(1, 4):
-            print(f" * P{i}")
+
 
     cv2.waitKey(0)
 
