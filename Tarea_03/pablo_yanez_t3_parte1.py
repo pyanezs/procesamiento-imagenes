@@ -74,7 +74,7 @@ def gen_noise(freq, dim):
     return np.matlib.repmat(noise, dim, 1)
 
 
-def butterworh_lp(X, Y, fc, n, X0=0, Y0=0):
+def butterworth_lp(X, Y, fc, n, X0=0, Y0=0):
     '''Filtro Butterworh'''
     return (1 / (1 + (np.power(np.sqrt((X - X0) ** 2 + (Y - Y0) ** 2) / fc, 2 * n))))
 
@@ -82,10 +82,10 @@ def butterworh_lp(X, Y, fc, n, X0=0, Y0=0):
 def band_stop_filter(X, Y, fc1, fc2, n, X0=0, Y0=0):
 
     # Primer Filtro: Pasabajos invertido -> High Pass
-    high_pass = 1 - butterworh_lp(X, Y, fc1, n, X0, Y0)
+    high_pass = 1 - butterworth_lp(X, Y, fc1, n, X0, Y0)
 
     # Segundo Filtro: Low-Pass
-    low_pass = butterworh_lp(X, Y, fc2, n, X0, Y0)
+    low_pass = butterworth_lp(X, Y, fc2, n, X0, Y0)
 
     # Mezclar ambos filtros -> Band-stop
     band_stop = 1 - high_pass * low_pass
@@ -128,7 +128,7 @@ def pregunta_1():
 
 def pregunta_2():
     '''P2: Agrega ruido a las imagenes'''
-    for freq in [10, 50, 80, 500]:
+    for freq in [10, 50, 80]:
         wd = os.path.join(OUTPUT_DIR, "p2", str(freq))
         Path(wd).mkdir(parents=True, exist_ok=True)
 
@@ -229,26 +229,11 @@ def pregunta_3():
 def main(args):
     '''Main'''
 
-    options = ["ALL", "P1", "P2", "P3"]
+    pregunta_1()
 
-    if len(args) != 2 or args[1].upper() not in options:
-        print("Wrong usage. Call using one of the following options:")
-        for option in options:
-            print(f" * {option}")
-        exit(1)
+    pregunta_2()
 
-    # Convertir entrada a mayusculas
-    args[1] = args[1].upper()
-
-    # Main program
-    if args[1] in ["P1", "ALL"]:
-        pregunta_1()
-
-    if args[1] in ["P2", "ALL"]:
-        pregunta_2()
-
-    if args[1] in ["P3", "ALL"]:
-        pregunta_3()
+    pregunta_3()
 
 
     cv2.waitKey(0)
