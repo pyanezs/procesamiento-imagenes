@@ -44,7 +44,7 @@
 % Levels to show in table of contents:
 % \setcounter{tocdepth}{-1} % only parts
 % \setcounter{tocdepth}{0}  % only parts and chapters
-% \setcounter{tocdepth}{1}  % part,chapters,sections
+\setcounter{tocdepth}{1}  % part,chapters,sections
 % \setcounter{tocdepth}{2}  % part,chapters,sections, subsections
 % \setcounter{tocdepth}{3}  % part,chapters,sections, subsections,subsubsections
 % \setcounter{tocdepth}{4}  % part,chapters,sections, subsections,subsubsections and paragraphs
@@ -162,14 +162,108 @@ Dado que las imagenes son señales discretas en dos dimensiones para obtener su 
 
 En (\ref{eq:dft2}) y (\ref{eq:dft2i}) se presenta las expresiones para el cálculo de la transformada de Fourier discreta para una señal de dos dimensiones, asi como la expresión para el cálculo de su inversa.
 
+
+\subsection{Ruido}
+
+En general, el ruido corresponde a una perturbación que contamina una señal. En el caso de las imagenes el ruido causa que un pixel tome un valor que no corresponde con el real.
+
+\subsubsection{Uniforme}
+produce variaciones en la imagen con una distribucion de intensidades con distribucion gaussiana, afectando completamente la imagen.
+
+\subsubsection{Impulsional}
+El ruido impulsional genera valores muy altos o muy bajos, diseminado en la imagen siguiendo una distribucion gaussiana.
+
+\subsubsection{Uniforme}
+Ruido que afecta la imagen de acuerdo a una distribución uniforme, lo que produce que el histograma de la imagen se aplane. Los ruidos frecuencias se encuentran dentro de este tipo de ruido.
+
+
 \subsection{Filtrado en el dominio de la Frecuencia}
 
-Una de las ventajas de trabajar en el espacio de la frecuencia es la posibilidad de realizar filtros en este dominio. Esto se deriva del teorema de la convolucion
+Una de las ventajas de trabajar en el espacio de la frecuencia es la posibilidad de realizar filtros en este dominio. Esto se deriva del teorema de la convolucion, en el cual la operación de convolución realizada en el dominio del espacio corresponde a realizar la multiplicación de las transformadas de Fourier de ambas señales, tal como indica (\ref{eq:fft_conv}).
 
 \begin{align}
-	\mathfrak{F} (x(n) * y(n) ) &= \mathfrak{F}(x(n)) \cdot \mathfrak{F}(y(n))\\
-	&= X(k) Y(k)
+	\begin{split}
+	\mathfrak{F} (x(n) * y(n) ) &= \mathfrak{F}(x(n)) \times \mathfrak{F}(y(n))\\
+	&= X(k) \times Y(k)
+	\end{split}\label{eq:fft_conv}
 \end{align}
+
+
+Los filtros se clasifican de acuerdo a sus banda de paso.
+
+\subsubsection{Filtro Pasa-Bajos}
+Permite el paso de las componentes de baja frecuencia de la señal.
+
+\subsubsection{Filtro Pasa-Altos}
+Filtras las componentes de baja frecuencia de una señal, dejando solo las componentes de alta frecuencia.
+
+\subsubsection{Filtro Pasa-Banda} El filtro pasa-banda solo permite el paso de las componentes de cierta banda de frecuencias.
+
+\subsubsection{Filtro Elimina-Banda} Elimina las componentes de la señal en la banda deseada.
+
+Si bien los filtros se exponen distintos tipos de filtros, en la práctica los filtros Pasa-Altos, Pasa-Banda y Elimina-Banda se puede construir utilizando solo filtros del tipo Pasa-Bajos.
+
+\subsection{Filtro de Butterworth}
+
+El filtro de Butterworth corresponde a filtro pasa-bajos diseñado para obtener una respuesta lo mas plana posible en la banda de paso. Fue presentado en 1930 por Stephen Butterworth en la publicación titulada `On the Theory of Filter Amplifiers'. En el ambito del procesamiento de imagenes se utiliza su version 2D, cuya ecuación se presenta en (\ref{eq:Butterworth}).
+
+\begin{align}
+H(k,l) = \frac{1}{ 1 + \left(  \frac{ \sqrt{k^2 + j^2} }{f_c}  \right) ^{2N} } \label{eq:Butterworth}
+\end{align}
+
+\begin{figure}[!tbh]
+  \begin{center}
+    \resizebox{\columnwidth}{!}{\includegraphics[trim={1cm 1cm 1cm 1cm}, clip]{butterworth_3d.png}}
+  \end{center}
+  \caption{Ejemplo Filtro de Butterworth 2D.} \label{fig:butter_fft}
+\end{figure}
+
+\section{Imagen a utilizar}
+
+Se considera utilizar una fotografia realizada por \href{https://www.flickr.com/photos/carlosyanez/}{Carlos Yáñez} que se encuentra disponible en \href{https://www.flickr.com/photos/carlosyanez/29061122837/}{Flickr}. Para efectos de este trabajo solo se utiliza una seccion de 512$\times$512 pixeles. El área seleccionada se presenta en la Figura (\ref{fig:roi_fft}).
+
+\begin{figure}[!tbh]
+  \begin{center}
+    \resizebox{\columnwidth}{!}{\includegraphics[]{puente.jpg}}
+  \end{center}
+  \caption{Fotografia de un puente.} \label{fig:original}
+\end{figure}
+
+\begin{figure}[!tbh]
+  \centering
+  \begin{minipage}[b]{0.49\columnwidth}
+    \includegraphics[width=\textwidth, trim={0cm 0cm 0cm 0cm}, clip]{outs_1/p1/puente_roi.jpg}
+    \subcaption{Sección a utilizar}
+  \end{minipage}
+  % \hfill
+  \begin{minipage}[b]{0.49\columnwidth}
+    \includegraphics[width=\textwidth, trim={2.5cm 0.5cm 3cm 0.8cm}, clip]{outs_1/p1/puente_fft.png}
+    \subcaption{Espectro}
+  \end{minipage}
+  \caption{Area seleccionada.} \label{fig:roi_fft}
+\end{figure}
+
+
+\section{Ruido Frecuencial}
+
+Se contamina la imagen con ruido frecuencia de 10, 50 y 80 [Hz].
+
+
+\section{Filtrado de Ruido Frecuencia}
+
+
+\section{Ruido Periódico}
+
+\section{Filtrado de Ruido Periódico}
+
+
+\section{Código}
+
+
+% \section{Anexo: Aliasing en señales discretas}
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
