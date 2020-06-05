@@ -115,15 +115,14 @@ def pregunta_1():
     # Espectro imagen
     fft_img = np.fft.fft2(img)
     fshift = np.fft.fftshift(fft_img)
-    spectrum = np.log(np.abs(fshift))
+    spectrum = 0.1* np.log(1 + np.abs(fshift))
     spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
     spectrum = np.uint8(spectrum * 255)
 
     show_save_spectrum(
         spectrum,
         f'Espectro Imagen',
-        os.path.join(wd, "puente_fft.png"),
-        cmap=cm.Spectral)
+        os.path.join(wd, "puente_fft.png"))
 
 
 def pregunta_2():
@@ -155,20 +154,18 @@ def pregunta_2():
         # Espectro imagen
         fft_img = np.fft.fft2(img)
         fshift = np.fft.fftshift(fft_img)
-        spectrum = np.log(np.abs(fshift))
+        spectrum = 0.1 * np.log(10 + np.abs(fshift))
 
         show_save_spectrum(
             spectrum,
             f'Ruido {freq} Hz',
-            os.path.join(wd, "puente_fft.png"),
-            cmap = cm.Spectral)
+            os.path.join(wd, "puente_fft.png"))
 
         trim = 256 - freq - 20
         show_save_spectrum(
             spectrum[trim:-trim, trim:-trim],
             f'Ruido {freq} Hz',
-            os.path.join(wd, "puente_fft_seccion.png"),
-            cmap = cm.Spectral)
+            os.path.join(wd, "puente_fft_seccion.png"))
 
 
 def pregunta_3():
@@ -211,6 +208,19 @@ def pregunta_3():
         # Aplicacion filtro
         new_img_fft = band_stop * img_fft
 
+        # Guarda Espectro nueva imagen
+        spectrum = 0.1 * np.log(1 + np.abs(new_img_fft))
+        spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
+        spectrum = np.uint8(spectrum * 255)
+
+        trim = 256 - freq - 20
+        show_save_spectrum(
+            spectrum[trim:-trim, trim:-trim],
+            f'Espectro Imagen Filtrada',
+            os.path.join(
+                wd, f"puente_fft_post_filter_N{str(filter_order).zfill(2)}.png"),
+            save_only=True)
+
         new_img = np.fft.ifft2(np.fft.fftshift(new_img_fft))
         new_img = cv2.normalize(
             abs(new_img),
@@ -234,7 +244,6 @@ def main(args):
     pregunta_2()
 
     pregunta_3()
-
 
     cv2.waitKey(0)
 

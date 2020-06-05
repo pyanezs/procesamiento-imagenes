@@ -75,7 +75,7 @@ def pregunta_1():
     # Espectro imagen
     fft_img = np.fft.fft2(img)
     fshift = np.fft.fftshift(fft_img)
-    spectrum = 0.1 * np.log(1 + np.abs(fshift))
+    spectrum = 0.1 * np.log(1000 + np.abs(fshift))
     spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
 
     show_save_spectrum(
@@ -99,14 +99,16 @@ def pregunta_2():
     img_fft = np.fft.fftshift(img_fft)
 
     # Spectrum
-    spectrum = 0.1 * np.log(1 + np.abs(img_fft))
+    spectrum = 0.1 * np.log(100 + np.abs(img_fft))
     spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
 
     cv2.imshow(f"Spectrum", spectrum)
 
-    thresholds = [(i, j)
-        for i in range(50, 90, 5)
-        for j in range(i + 25, 90, 5)]
+    # Valores usados para inspeccion
+    # thresholds = [(i, j)
+    #     for i in range(50, 90, 5)
+    #     for j in range(i + 25, 90, 5)]
+    thresholds = [(50, 75)]
 
     for lower_thresh, upper_thresh in thresholds:
         lower_thresh = lower_thresh / 100
@@ -116,36 +118,24 @@ def pregunta_2():
         rt, spectrum_bina_1 = cv2.threshold(spectrum, lower_thresh, 1.0, cv2.THRESH_BINARY)
         rt, spectrum_bina_2 = cv2.threshold(spectrum, upper_thresh, 1.0, cv2.THRESH_BINARY)
 
-        # spectrum_bina_2 = np.uint8(spectrum_bina_2 * 255)
-        # spectrum_bina_2 = cv2.normalize(
-        #     spectrum_bina_2,
-        #     None,
-        #     0.0,
-        #     1.0,
-        #     cv2.NORM_MINMAX)
-        # spectrum_bina_2 = cv2.medianBlur(spectrum_bina_2, 3)
-
-
         title = f"Spectrum - Binary Thesh = {lower_thresh}"
         out_file = os.path.join(wd, f"spect_bina_{lower_thresh:.2f}.png")
         show_save_spectrum(spectrum_bina_1, title, out_file,save_only=True, cmap="gray")
 
         title = f"Spectrum - Binary Thesh = {upper_thresh}"
         out_file = os.path.join(wd, f"spect_bina_{upper_thresh:.2f}.png")
-        show_save_spectrum(spectrum_bina_1, title, out_file,save_only=True, cmap="gray")
+        show_save_spectrum(spectrum_bina_2, title, out_file,save_only=True, cmap="gray")
 
         # Tiene valor 1 en todos los puntos en el espectro que hay que atenuar
         mask = 1 - (spectrum_bina_1 - spectrum_bina_2)
         cv2.imshow(f"Mask", mask)
 
         title = f"Mask Thresh LT: {lower_thresh} UT: {upper_thresh:.2f}"
-        out_file = os.path.join(
-            wd, f"{lower_thresh:.2f}_{upper_thresh:.2f}_mask.png")
+        out_file = os.path.join(wd, f"{lower_thresh:.2f}_{upper_thresh:.2f}_mask.png")
 
-        show_save_spectrum(mask, title, out_file,
-                        save_only=True, cmap="gray")
+        show_save_spectrum(mask, title, out_file, save_only=True, cmap="gray")
 
-        for factor in range(0,5):
+        for factor in range(0,1):
             factor = factor / 10
 
             my_filter = mask
@@ -153,6 +143,17 @@ def pregunta_2():
 
             # Aplicacion filtro
             new_img_fft = my_filter * img_fft
+
+            # Guarda espectro
+            spectrum = 0.1 * np.log(100 + np.abs(new_img_fft))
+            spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
+            spectrum = np.uint8(spectrum * 255)
+
+            show_save_spectrum(
+                spectrum,
+                f'Espectro Imagen Filtrada',
+                os.path.join(wd, f"{lower_thresh: .2f}_{upper_thresh: .2f}_cm_{factor: .2f}_spectrum.png"),
+                save_only=False)
 
             # FFT Inversa
             new_img = np.fft.ifft2(np.fft.fftshift(new_img_fft))
@@ -170,15 +171,7 @@ def pregunta_2():
 
             cv2.imwrite(out_file, new_img)
 
-            new_img = cv2.medianBlur(new_img, 3)
-
-            out_file = os.path.join(
-                wd, f"{lower_thresh:.2f}_{upper_thresh:.2f}_cm_{factor:.2f}_median.png")
-
-            cv2.imwrite(out_file, new_img)
-
-
-
+            cv2.imshow("Imagen Filtrada", new_img)
 
 
 def main(args):
