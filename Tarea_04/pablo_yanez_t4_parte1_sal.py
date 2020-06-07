@@ -2,10 +2,10 @@
 import os
 import cv2
 import sys
-
 import numpy as np
+import matplotlib.pyplot as plt
+import skimage.util
 from pathlib import Path
-
 
 def load_image():
     '''Carga imagen'''
@@ -47,14 +47,73 @@ def main(args):
     cv2.imwrite(out_file, img)
 
     ########################################################################
-    # Agregar ruido
-    noise = np.random.random(img.shape)
-    noise = np.uint8(np.where(noise >= 0.3, 256, 0))
-    img_noise = cv2.add(img, noise)
-    cv2.imshow("Imagen con ruido pimienta", img_noise)
+    # Histograma Imagen
+    counts, bins = np.histogram(img, bins=200)
+    plt.figure()
+    plt.title("Histograma Imagen")
+    plt.hist(bins[:-1], bins, weights=counts)
+    plt.savefig(os.path.join(wd, f"img_hist.png"))
+    plt.close('all')
 
     ########################################################################
-    # Filtrar ruido
+    # Espectro Imagen
+    img_fft = np.fft.fft2(img)
+    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(img_fft)))
+    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
+
+    fig = plt.figure()
+    plt.title("Espectro imagen de entrada")
+    plt.imshow(spectrum, cmap="gray")
+    plt.savefig(os.path.join(wd, f"img_spectrum.png"))
+    plt.close('all')
+
+    ########################################################################
+    # Agregar ruido
+    noisy = skimage.util.random_noise(
+        img,
+        mode='s&p',
+        seed=0,
+        amount=0.08,
+        salt_vs_pepper= 1)
+    noisy = np.uint8(noisy * 255)
+
+    cv2.imshow("Imagen con ruido gaussiano", noisy)
+    out_file = os.path.join(wd, "noisy.jpg")
+    cv2.imwrite(out_file, noisy)
+
+    ########################################################################
+    # Histograma Ruido
+    counts, bins = np.histogram(img, bins=200)
+    plt.figure()
+    plt.title("Histograma Imagen")
+    plt.hist(bins[:-1], bins, weights=counts)
+    plt.savefig(os.path.join(wd, f"img_hist.png"))
+    plt.close('all')
+
+    ########################################################################
+    # Histograma Imagen con Rudio
+    counts, bins = np.histogram(noisy, bins=200)
+    plt.figure()
+    plt.title("Histograma Imagen con Ruido")
+    plt.hist(bins[:-1], bins, weights=counts)
+    plt.savefig(os.path.join(wd, f"noisy_hist.png"))
+    plt.close('all')
+
+    ########################################################################
+    # Espectro Imagen con Ruido
+    noisy_fft = np.fft.fft2(noisy)
+    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(noisy_fft)))
+    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
+
+    fig = plt.figure()
+    plt.title("Espectro imagen con Ruido")
+    plt.imshow(spectrum, cmap="gray")
+    plt.savefig(os.path.join(wd, f"noisy_spectrum.png"))
+    plt.close('all')
+
+    ########################################################################
+    # Espectr Ruido
+
 
     cv2.waitKey(0)
 
