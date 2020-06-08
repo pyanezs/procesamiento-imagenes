@@ -54,7 +54,7 @@ def main(args):
     plt.figure()
     plt.title("Histograma Imagen")
     plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, f"img_hist.png"))
+    plt.savefig(os.path.join(wd, "img_hist.png"))
     plt.close('all')
 
     ########################################################################
@@ -63,16 +63,20 @@ def main(args):
     spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(img_fft)))
     spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
 
-    fig = plt.figure()
+    plt.figure()
     plt.title("Espectro imagen de entrada")
     plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, f"img_spectrum.png"))
+    plt.savefig(os.path.join(wd, "img_spectrum.png"))
     plt.close('all')
 
     ########################################################################
     # Agregar ruido
     sigma = 0.1
-    noisy = skimage.util.random_noise(img, mode="gaussian", var=sigma ** 2, seed=0)
+    noisy = skimage.util.random_noise(
+        img,
+        mode="gaussian",
+        var=sigma ** 2,
+        seed=0)
     noisy = np.uint8(noisy * 255)
 
     cv2.imshow("Imagen con ruido gaussiano", noisy)
@@ -85,7 +89,7 @@ def main(args):
     plt.figure()
     plt.title("Histograma Imagen con Ruido")
     plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, f"noisy_hist.png"))
+    plt.savefig(os.path.join(wd, "noisy_hist.png"))
     plt.close('all')
 
     ########################################################################
@@ -97,7 +101,7 @@ def main(args):
     plt.figure()
     plt.title("Espectro imagen con Ruido")
     plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, f"noisy_spectrum.png"))
+    plt.savefig(os.path.join(wd, "noisy_spectrum.png"))
     plt.close('all')
 
     ########################################################################

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import skimage.util
 from pathlib import Path
 
+
 def load_image():
     '''Carga imagen'''
 
@@ -52,7 +53,7 @@ def main(args):
     plt.figure()
     plt.title("Histograma Imagen")
     plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, f"img_hist.png"))
+    plt.savefig(os.path.join(wd, "img_hist.png"))
     plt.close('all')
 
     ########################################################################
@@ -64,7 +65,7 @@ def main(args):
     fig = plt.figure()
     plt.title("Espectro imagen de entrada")
     plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, f"img_spectrum.png"))
+    plt.savefig(os.path.join(wd, "img_spectrum.png"))
     plt.close('all')
 
     ########################################################################
@@ -87,7 +88,7 @@ def main(args):
     plt.figure()
     plt.title("Histograma Imagen")
     plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, f"img_hist.png"))
+    plt.savefig(os.path.join(wd, "img_hist.png"))
     plt.close('all')
 
     ########################################################################
@@ -96,7 +97,7 @@ def main(args):
     plt.figure()
     plt.title("Histograma Imagen con Ruido")
     plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, f"noisy_hist.png"))
+    plt.savefig(os.path.join(wd, "noisy_hist.png"))
     plt.close('all')
 
     ########################################################################
@@ -105,10 +106,10 @@ def main(args):
     spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(noisy_fft)))
     spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
 
-    fig = plt.figure()
+    plt.figure()
     plt.title("Espectro imagen con Ruido")
     plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, f"noisy_spectrum.png"))
+    plt.savefig(os.path.join(wd, "noisy_spectrum.png"))
     plt.close('all')
 
     ########################################################################
