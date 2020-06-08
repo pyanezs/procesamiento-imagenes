@@ -8,23 +8,25 @@ def filtro_mediana_adaptiva(A):
     ws   = 4
     J = np.zeros([m,n])
 
+    count = 0
     for i in range(0,m-Smax):
         for j in range(0,n-Smax):
+            count +=1
             sw     = 1
             Zxy    = A[i,j]
             wadapt = ws
             while(sw):
                 B = A[i:i+wadapt, j:j+wadapt]
-        
+
                 pixel, newwin = bloque(B,Zxy,wadapt,Smax)
                 if ( pixel != -1):
                     J[i,j]=pixel
                     sw = 0
                 else:
                     wadapt=newwin
-            
+
     return (np.uint8(J[0:m-Smax, 0:n-Smax]))
-                
+
 def bloque(A,Zxy, wadapt, Smax):
 
     newwin= wadapt
@@ -38,33 +40,31 @@ def bloque(A,Zxy, wadapt, Smax):
     A2= Zmed - Zmax
 
     if (newwin<=Smax):
-    
         #% Nivel A
         if (A1>0) & (A2<0):
             #%nivel B
             B1= float(Zxy)-float(Zmin)
             B2= float(Zxy)-float(Zmax)
-        
+
             if (B1>0) & (B2<0):
                 px=Zxy
             else:
                 px=Zmed
-            
         else:
-            # Incrementamos el tamaño de 
+            # Incrementamos el tamaño de
             # la ventana
             newwin= newwin+1
     else:
         px=Zxy
-    
+
     return(px, newwin)
 
 #programa ppal
-img = cv2.imread('cameraman.png')
+img = cv2.imread('Fotos/cameraman.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 #Ruido impulsional
-mat_noise=np.random.random(gray.shape); #creates a uniform random variable from 0 to 1 
+mat_noise=np.random.random(gray.shape); #creates a uniform random variable from 0 to 1
 
 sp_noise_white= np.uint8(np.where(mat_noise>=0.9, 255,0))
 sp_noise_black= np.uint8(np.where(mat_noise>=0.1,  1,0))

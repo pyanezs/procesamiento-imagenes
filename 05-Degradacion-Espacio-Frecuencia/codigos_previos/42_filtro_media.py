@@ -3,15 +3,15 @@ import numpy as np
 import scipy.ndimage as ndi
 
 def filtro_media(A):
-    S= np.mean(A.flatten())    
+    S= np.mean(A.flatten())
     return S
 
 
-img = cv2.imread('cameraman.png')
+img = cv2.imread('Fotos/cameraman.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
 #Ruido impulsional
-mat_noise=np.random.random(gray.shape); #creates a uniform random variable from 0 to 1 
+mat_noise=np.random.random(gray.shape); #creates a uniform random variable from 0 to 1
 
 sp_noise_white= np.uint8(np.where(mat_noise>=0.9, 255,0))
 sp_noise_black= np.uint8(np.where(mat_noise>=0.1,  1,0))

@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import skimage.util
 from pathlib import Path
 
+import mediana_adaptivo as ma
+
 def load_image():
     '''Carga imagen'''
 
@@ -69,10 +71,10 @@ def main(args):
 
     ########################################################################
     # Agregar ruido
-    noisy = skimage.util.random_noise(img, mode='pepper', seed=1, amount=0.1)
+    noisy = skimage.util.random_noise(img, mode='pepper', seed=1, amount=0.20)
     noisy = np.uint8(noisy * 255)
 
-    cv2.imshow("Imagen con ruido gaussiano", noisy)
+    cv2.imshow("Imagen con ruido pimienta", noisy)
     out_file = os.path.join(wd, "noisy.jpg")
     cv2.imwrite(out_file, noisy)
 
@@ -100,6 +102,8 @@ def main(args):
     ########################################################################
     # Filtrar ruido
 
+    img_filter = ma.filtro_mediana_adaptiva(img)
+    cv2.imshow("Imagen filtrada", noisy)
 
     cv2.waitKey(0)
 

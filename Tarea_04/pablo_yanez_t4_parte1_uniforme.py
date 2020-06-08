@@ -4,7 +4,7 @@ import cv2
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import skimage.util
+import numpy.matlib
 from pathlib import Path
 
 
@@ -29,6 +29,25 @@ def load_section():
     return img[x1:x2, y1:y2]
 
 
+def gen_noise(img, freq):
+    '''Genera ruido de la frecuencia y tamaño especficado'''
+    m, n = img.shape
+    img_norm = cv2.normalize(
+        img.astype('float'),
+        None,
+        0.0,
+        1.0,
+        cv2.NORM_MINMAX)
+
+    values = np.linspace(0, 1, num=m)
+    noise = 0.1 * np.sin(2 * np.pi * freq * values)
+    noise = np.matlib.repmat(noise, n, 1)
+
+    img_norm = np.add(img_norm, noise)
+
+    return np.uint8(img_norm * 255)
+
+
 def main(args):
     '''Main'''
 
@@ -49,7 +68,7 @@ def main(args):
     plt.figure()
     plt.title("Histograma Imagen")
     plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, f"img_hist.png"))
+    plt.savefig(os.path.join(wd, "img_hist.png"))
     plt.close('all')
 
     ########################################################################
@@ -61,7 +80,7 @@ def main(args):
     fig = plt.figure()
     plt.title("Espectro imagen de entrada")
     plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, f"img_spectrum.png"))
+    plt.savefig(os.path.join(wd, "img_spectrum.png"))
     plt.close('all')
 
     ########################################################################
@@ -71,11 +90,9 @@ def main(args):
 
     ########################################################################
     # Agregar ruido
-    noisy = img
-    # noisy = skimage.util.random_noise(img, mode='speckle', seed=0, var=0.08)
-    # noisy = np.uint8(noisy * 255)
+    noisy = gen_noise(img, 15)
 
-    cv2.imshow("Imagen con ruido gaussiano", noisy)
+    cv2.imshow("Imagen con ruido uniforme", noisy)
     out_file = os.path.join(wd, "noisy.jpg")
     cv2.imwrite(out_file, noisy)
 
@@ -85,7 +102,7 @@ def main(args):
     plt.figure()
     plt.title("Histograma Imagen con Ruido")
     plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, f"noisy_hist.png"))
+    plt.savefig(os.path.join(wd, "noisy_hist.png"))
     plt.close('all')
 
     ########################################################################

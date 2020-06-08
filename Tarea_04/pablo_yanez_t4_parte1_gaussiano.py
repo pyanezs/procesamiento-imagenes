@@ -94,7 +94,7 @@ def main(args):
     spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(noisy_fft)))
     spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
 
-    fig = plt.figure()
+    plt.figure()
     plt.title("Espectro imagen con Ruido")
     plt.imshow(spectrum, cmap="gray")
     plt.savefig(os.path.join(wd, f"noisy_spectrum.png"))
