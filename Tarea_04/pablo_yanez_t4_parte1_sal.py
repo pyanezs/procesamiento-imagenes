@@ -74,7 +74,7 @@ def main(args):
         mode='s&p',
         seed=0,
         amount=0.08,
-        salt_vs_pepper= 1)
+        salt_vs_pepper=1)
     noisy = np.uint8(noisy * 255)
 
     cv2.imshow("Imagen con ruido gaussiano", noisy)
