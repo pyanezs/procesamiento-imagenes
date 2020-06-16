@@ -6,12 +6,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy.matlib
 from pathlib import Path
+import scipy.ndimage as ndi
+from math import pi
 
 
 def load_image():
     '''Carga imagen'''
 
-    INPUT_FILE = os.path.join("inputs", "7062826349_4888c4f9d0_w.jpg")
+    INPUT_FILE = os.path.join("inputs", "dientes.jpg")
     img = cv2.imread(INPUT_FILE, cv2.IMREAD_GRAYSCALE)
     return img
 
@@ -20,32 +22,69 @@ def load_section():
     '''Carga seccion de interes de la imagen y la normaliza'''
     img = load_image()
 
-    x1 = 40
-    x2 = min(img.shape[0], x1 + 256)
-
     y1 = 20
-    y2 = min(img.shape[1], y1 + 256)
+    y2 = y1 + img.shape[0] - 1
+    img = img[:-1, y1:y2]
 
-    return img[x1:x2, y1:y2]
+    return img
 
 
-def gen_noise(img, freq):
-    '''Genera ruido de la frecuencia y tamaño especficado'''
-    m, n = img.shape
-    img_norm = cv2.normalize(
-        img.astype('float'),
-        None,
-        0.0,
-        1.0,
-        cv2.NORM_MINMAX)
+def filtro_mediana_adaptiva(roi, s_max=16, ws=4):
+    '''Codigo de material de clase'''
+    m, n = roi.shape
+    J = np.zeros([m, n])
 
-    values = np.linspace(0, 1, num=m)
-    noise = 0.1 * np.sin(2 * np.pi * freq * values)
-    noise = np.matlib.repmat(noise, n, 1)
+    count = 0
+    for i in range(0, m - s_max):
+        for j in range(0, n - s_max):
+            count += 1
+            sw = True
+            Zxy = roi[i, j]
+            wadapt = ws
+            while sw:
+                B = roi[i:i+wadapt, j:j+wadapt]
+                pixel, newwin = bloque(B, Zxy, wadapt, s_max)
+                if (pixel != -1):
+                    J[i, j] = pixel
+                    sw = False
+                else:
+                    wadapt = newwin
 
-    img_norm = np.add(img_norm, noise)
+    return (np.uint8(J[0:(m-s_max), 0:(n-s_max)]))
 
-    return np.uint8(img_norm * 255)
+
+def bloque(A, Zxy, wadapt, Smax):
+
+    newwin = wadapt
+
+    Zmin = np.min(A.flatten())
+    Zmax = np.max(A.flatten())
+    Zmed = np.median(A.flatten())
+    px = -1
+
+    A1 = Zmed - Zmin
+    A2 = Zmed - Zmax
+
+    if (newwin <= Smax):
+        #% Nivel A
+        if (A1 > 0) & (A2 < 0):
+            #%nivel B
+            B1 = float(Zxy)-float(Zmin)
+            B2 = float(Zxy)-float(Zmax)
+
+            if (B1 > 0) & (B2 < 0):
+                px = Zxy
+            else:
+                px = Zmed
+        else:
+            # Incrementamos el tamaño de
+            # la ventana
+            newwin = newwin+1
+    else:
+        px = Zxy
+
+    return(px, newwin)
+
 
 
 def main(args):
@@ -64,7 +103,7 @@ def main(args):
 
     ########################################################################
     # Histograma Imagen
-    counts, bins = np.histogram(img, bins=200)
+    counts, bins = np.histogram(img, bins=200, density=True)
     plt.figure()
     plt.title("Histograma Imagen")
     plt.hist(bins[:-1], bins, weights=counts)
@@ -90,35 +129,35 @@ def main(args):
 
     ########################################################################
     # Agregar ruido
-    noisy = gen_noise(img, 15)
+    img_norm = cv2.normalize(
+        img.astype('float'),
+        None,
+        0.0,
+        1.0,
+        cv2.NORM_MINMAX)
 
-    cv2.imshow("Imagen con ruido uniforme", noisy)
-    out_file = os.path.join(wd, "noisy.jpg")
-    cv2.imwrite(out_file, noisy)
+    noisy_imgs = dict()
 
-    ########################################################################
-    # Histograma Imagen con Rudio
-    counts, bins = np.histogram(noisy, bins=200)
-    plt.figure()
-    plt.title("Histograma Imagen con Ruido")
-    plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, "noisy_hist.png"))
-    plt.close('all')
+    for b in [40, 60, 150]:
+        noise = np.random.uniform(low=10/255, high=b/255, size=img.shape)
 
-    ########################################################################
-    # Espectro Imagen con Ruido
-    noisy_fft = np.fft.fft2(noisy)
-    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(noisy_fft)))
-    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
+        noisy = cv2.normalize((noise + img_norm), None, 0.0, 255.0, cv2.NORM_MINMAX)
+        noisy = np.uint8(noisy)
 
-    plt.figure()
-    plt.title("Espectro imagen con Ruido")
-    plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, "noisy_spectrum.png"))
-    plt.close('all')
+        # noisy = np.uint8(cv2.multiply(noise, img_norm) * 255)
+        cv2.imshow(f"Imagen con ruido uniforme - b = {b}", noisy)
+        out_file = os.path.join(wd, f"noisy_b{str(b).zfill(3)}.jpg")
+        cv2.imwrite(out_file, noisy)
+        noisy_imgs[b] = noisy
 
     ########################################################################
-    # Filtrar ruido
+    # Filtrado
+
+    for b, noisy in noisy_imgs.items():
+        print(f"Filtrando imagen {b}")
+        img = filtro_mediana_adaptiva(noisy)
+        out_file = os.path.join(wd, f"filtered_{str(b).zfill(3)}.jpg")
+        cv2.imwrite(out_file, img)
 
     cv2.waitKey(0)
 

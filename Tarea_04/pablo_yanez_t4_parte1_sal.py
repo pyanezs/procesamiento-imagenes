@@ -6,12 +6,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import skimage.util
 from pathlib import Path
+import scipy.ndimage as ndi
 
 
 def load_image():
     '''Carga imagen'''
 
-    INPUT_FILE = os.path.join("inputs", "7062826349_4888c4f9d0_w.jpg")
+    INPUT_FILE = os.path.join("inputs", "dientes.jpg")
     img = cv2.imread(INPUT_FILE, cv2.IMREAD_GRAYSCALE)
     return img
 
@@ -20,13 +21,15 @@ def load_section():
     '''Carga seccion de interes de la imagen y la normaliza'''
     img = load_image()
 
-    x1 = 40
-    x2 = min(img.shape[0], x1 + 256)
-
     y1 = 20
-    y2 = min(img.shape[1], y1 + 256)
+    y2 = y1 + img.shape[0] - 1
+    img = img[:-1, y1:y2]
 
-    return img[x1:x2, y1:y2]
+    return img
+
+
+def min_filter(roi):
+    return np.min(roi.flatten())
 
 
 def main(args):
@@ -57,18 +60,6 @@ def main(args):
     plt.close('all')
 
     ########################################################################
-    # Espectro Imagen
-    img_fft = np.fft.fft2(img)
-    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(img_fft)))
-    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
-
-    fig = plt.figure()
-    plt.title("Espectro imagen de entrada")
-    plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, "img_spectrum.png"))
-    plt.close('all')
-
-    ########################################################################
     # Agregar ruido
     noisy = skimage.util.random_noise(
         img,
@@ -76,20 +67,26 @@ def main(args):
         seed=0,
         amount=0.08,
         salt_vs_pepper=1)
-    noisy = np.uint8(noisy * 255)
 
-    cv2.imshow("Imagen con ruido gaussiano", noisy)
+    noisy = cv2.normalize(noisy.astype('float'), None, 0.0, 255, cv2.NORM_MINMAX)
+    noisy = np.uint8(noisy)
+
+    cv2.imshow("Imagen con ruido sal", noisy)
     out_file = os.path.join(wd, "noisy.jpg")
     cv2.imwrite(out_file, noisy)
 
     ########################################################################
-    # Histograma Ruido
-    counts, bins = np.histogram(img, bins=200)
-    plt.figure()
-    plt.title("Histograma Imagen")
-    plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, "img_hist.png"))
-    plt.close('all')
+    # # Sal y pimienta para informe
+    # noisy = skimage.util.random_noise(
+    #     img,
+    #     mode='s&p',
+    #     seed=0,
+    #     amount=0.08,
+    #     salt_vs_pepper=0.5)
+    # noisy = np.uint8(noisy * 255)
+
+    # out_file = os.path.join(wd, "noisy_sp.jpg")
+    # cv2.imwrite(out_file, noisy)
 
     ########################################################################
     # Histograma Imagen con Rudio
@@ -101,20 +98,14 @@ def main(args):
     plt.close('all')
 
     ########################################################################
-    # Espectro Imagen con Ruido
-    noisy_fft = np.fft.fft2(noisy)
-    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(noisy_fft)))
-    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
+    # Filtrar ruido
+    masks = [(i, j) for i in range(1, 4) for j in range(1, 4)]
 
-    plt.figure()
-    plt.title("Espectro imagen con Ruido")
-    plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, "noisy_spectrum.png"))
-    plt.close('all')
-
-    ########################################################################
-    # Espectr Ruido
-
+    for i, j in masks:
+        filtered = ndi.generic_filter(noisy, min_filter, [i, j])
+        out_file = os.path.join(wd, f"filtered_{i}x{j}.jpg")
+        cv2.imwrite(out_file, filtered)
+        cv2.imshow(f"Imagen Filtrada - min() - {i}x{j}", filtered)
 
     cv2.waitKey(0)
 

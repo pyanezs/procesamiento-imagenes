@@ -3,15 +3,17 @@ import os
 import cv2
 import sys
 import numpy as np
+from pathlib import Path
 import matplotlib.pyplot as plt
 import skimage.util
-from pathlib import Path
+import scipy.ndimage as ndi
+from math import pi
 
 
 def load_image():
     '''Carga imagen'''
 
-    INPUT_FILE = os.path.join("inputs", "7062826349_4888c4f9d0_w.jpg")
+    INPUT_FILE = os.path.join("inputs", "dientes.jpg")
     img = cv2.imread(INPUT_FILE, cv2.IMREAD_GRAYSCALE)
     return img
 
@@ -20,13 +22,11 @@ def load_section():
     '''Carga seccion de interes de la imagen y la normaliza'''
     img = load_image()
 
-    x1 = 40
-    x2 = min(img.shape[0], x1 + 256)
-
     y1 = 20
-    y2 = min(img.shape[1], y1 + 256)
+    y2 = y1 + img.shape[0] - 1
+    img = img[:-1, y1:y2]
 
-    return img[x1:x2, y1:y2]
+    return img
 
 
 def main(args):
@@ -40,7 +40,6 @@ def main(args):
     ########################################################################
     # Carga seccion de imagen
     img = load_section()
-    print(img.shape)
     cv2.imshow("Imagen a utilizar", img)
 
     ########################################################################
@@ -58,58 +57,57 @@ def main(args):
     plt.close('all')
 
     ########################################################################
-    # Espectro Imagen
-    img_fft = np.fft.fft2(img)
-    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(img_fft)))
-    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
-
-    plt.figure()
-    plt.title("Espectro imagen de entrada")
-    plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, "img_spectrum.png"))
-    plt.close('all')
-
-    ########################################################################
     # Agregar ruido
-    sigma = 0.1
-    noisy = skimage.util.random_noise(
-        img,
-        mode="gaussian",
-        var=sigma ** 2,
-        seed=0)
-    noisy = np.uint8(noisy * 255)
+    noisy_imgs = dict()
+    for i in [5, 10, 50]:
+        sigma = i/100
+        noisy = skimage.util.random_noise(
+            img,
+            mode="gaussian",
+            var=sigma ** 2,
+            seed=0)
+        noisy = np.uint8(noisy * 255)
 
-    cv2.imshow("Imagen con ruido gaussiano", noisy)
-    out_file = os.path.join(wd, "noisy.jpg")
-    cv2.imwrite(out_file, noisy)
+        cv2.imshow("Imagen con ruido gaussiano", noisy)
+        out_file = os.path.join(wd, f"noisy_{str(i).zfill(3)}.jpg")
+        cv2.imwrite(out_file, noisy)
 
+        noisy_imgs[i] = noisy
     ########################################################################
     # Histograma Imagen con Rudio
-    counts, bins = np.histogram(noisy, bins=200)
-    plt.figure()
-    plt.title("Histograma Imagen con Ruido")
-    plt.hist(bins[:-1], bins, weights=counts)
-    plt.savefig(os.path.join(wd, "noisy_hist.png"))
-    plt.close('all')
+    for i, noisy in noisy_imgs.items():
+        noisy = noisy_imgs[i]
 
-    ########################################################################
-    # Espectro Imagen con Ruido
-    noisy_fft = np.fft.fft2(noisy)
-    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(noisy_fft)))
-    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
-
-    plt.figure()
-    plt.title("Espectro imagen con Ruido")
-    plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, "noisy_spectrum.png"))
-    plt.close('all')
+        counts, bins = np.histogram(noisy, bins=200)
+        plt.figure()
+        plt.title("Histograma Imagen con Ruido")
+        plt.hist(bins[:-1], bins, weights=counts)
+        plt.savefig(os.path.join(wd, f"noisy_hist_{str(i).zfill(3)}.png"))
+        plt.close('all')
 
     ########################################################################
     # Filtrar ruido
+    for i in range(3, 8):
+        print(f"Tamaño ventana: {i}")
 
+        # Filtro de codigos de clase
+        def filtro_gaussiano(roi):
+            roi = np.reshape(roi, (i, i))
+            sigma = 2.2
+            t = i
+            ventana = np.linspace(-t/2, t/2, t)
+            u, v = np.meshgrid(ventana, ventana)
+            G = (1/(sigma**2*2*pi))*np.exp(-(u**2+v**2)/(2*sigma**2))
+            N = G/np.sum(G.flatten())  # normalizamos
+            T = N * roi
+            return np.sum(T)
 
-
-
+        for index, noisy in noisy_imgs.items():
+            print("Filtrando imagen")
+            filtered = ndi.generic_filter(noisy, filtro_gaussiano, [i, i])
+            out_file = os.path.join(wd, f"filtered_{index}_{i}x{i}.jpg")
+            cv2.imwrite(out_file, filtered)
+            # cv2.imshow(f"Imagen Filtrada - media - {i}x{i}", filtered)
 
     cv2.waitKey(0)
 

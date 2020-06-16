@@ -6,14 +6,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import skimage.util
 from pathlib import Path
-
-import mediana_adaptivo as ma
+import scipy.ndimage as ndi
 
 
 def load_image():
     '''Carga imagen'''
 
-    INPUT_FILE = os.path.join("inputs", "7062826349_4888c4f9d0_w.jpg")
+    INPUT_FILE = os.path.join("inputs", "dientes.jpg")
     img = cv2.imread(INPUT_FILE, cv2.IMREAD_GRAYSCALE)
     return img
 
@@ -22,13 +21,15 @@ def load_section():
     '''Carga seccion de interes de la imagen y la normaliza'''
     img = load_image()
 
-    x1 = 40
-    x2 = min(img.shape[0], x1 + 256)
-
     y1 = 20
-    y2 = min(img.shape[1], y1 + 256)
+    y2 = y1 + img.shape[0] - 1
+    img = img[:-1, y1:y2]
 
-    return img[x1:x2, y1:y2]
+    return img
+
+
+def max_filter(roi):
+    return np.max(roi.flatten())
 
 
 def main(args):
@@ -59,25 +60,16 @@ def main(args):
     plt.close('all')
 
     ########################################################################
-    # Espectro Imagen
-    img_fft = np.fft.fft2(img)
-    spectrum = 0.1 * np.log(1 + np.abs(np.fft.fftshift(img_fft)))
-    spectrum = cv2.normalize(spectrum, None, 0.0, 1.0, cv2.NORM_MINMAX)
-
-    plt.figure()
-    plt.title("Espectro imagen de entrada")
-    plt.imshow(spectrum, cmap="gray")
-    plt.savefig(os.path.join(wd, "img_spectrum.png"))
-    plt.close('all')
-
-    ########################################################################
     # Agregar ruido
     noisy = skimage.util.random_noise(
         img,
         mode='pepper',
         seed=1,
         amount=0.20)
-    noisy = np.uint8(noisy * 255)
+
+
+    noisy = cv2.normalize(noisy.astype('float'), None, 0.0, 255, cv2.NORM_MINMAX)
+    noisy = np.uint8(noisy)
 
     cv2.imshow("Imagen con ruido pimienta", noisy)
     out_file = os.path.join(wd, "noisy.jpg")
@@ -106,8 +98,13 @@ def main(args):
 
     ########################################################################
     # Filtrar ruido
-    img_filter = ma.filtro_mediana_adaptiva(img)
-    cv2.imshow("Imagen filtrada", noisy)
+    masks = [(i, j) for i in range(1, 4) for j in range(1, 4)]
+
+    for i, j in masks:
+        filtered = ndi.generic_filter(noisy, max_filter, [i, j])
+        out_file = os.path.join(wd, f"filtered_{i}x{j}.jpg")
+        cv2.imwrite(out_file, filtered)
+        cv2.imshow(f"Imagen Filtrada - max() - {i}x{j}", filtered)
 
     cv2.waitKey(0)
 
