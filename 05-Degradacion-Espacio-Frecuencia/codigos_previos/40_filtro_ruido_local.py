@@ -4,18 +4,18 @@ import scipy.ndimage as ndi
 
 def filtro_ruido_local(A):
 
-    var_N = 0.0009   #varianza estimada 
+    var_N = 0.0009   #varianza estimada
     B = A.flatten()
     n = len(B)
     var_L = np.var(B) #varianza en la mascara
-    
+
     mu    = np.mean(B)
-    g     = B[np.uint8(n/2)]     
+    g     = B[np.uint8(n/2)]
     f     =  g - (var_N/var_L)*(g-mu)
-    return f   
-        
+    return f
+
 #programa ppal.
-img = cv2.imread('cameraman.png')
+img = cv2.imread('Fotos/cameraman.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 gray_norm = cv2.normalize(gray.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 

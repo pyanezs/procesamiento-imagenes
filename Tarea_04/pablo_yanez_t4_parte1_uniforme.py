@@ -29,64 +29,6 @@ def load_section():
     return img
 
 
-def filtro_mediana_adaptiva(roi, s_max=16, ws=4):
-    '''Codigo de material de clase'''
-    m, n = roi.shape
-    J = np.zeros([m, n])
-
-    count = 0
-    for i in range(0, m - s_max):
-        for j in range(0, n - s_max):
-            count += 1
-            sw = True
-            Zxy = roi[i, j]
-            wadapt = ws
-            while sw:
-                B = roi[i:i+wadapt, j:j+wadapt]
-                pixel, newwin = bloque(B, Zxy, wadapt, s_max)
-                if (pixel != -1):
-                    J[i, j] = pixel
-                    sw = False
-                else:
-                    wadapt = newwin
-
-    return (np.uint8(J[0:(m-s_max), 0:(n-s_max)]))
-
-
-def bloque(A, Zxy, wadapt, Smax):
-
-    newwin = wadapt
-
-    Zmin = np.min(A.flatten())
-    Zmax = np.max(A.flatten())
-    Zmed = np.median(A.flatten())
-    px = -1
-
-    A1 = Zmed - Zmin
-    A2 = Zmed - Zmax
-
-    if (newwin <= Smax):
-        #% Nivel A
-        if (A1 > 0) & (A2 < 0):
-            #%nivel B
-            B1 = float(Zxy)-float(Zmin)
-            B2 = float(Zxy)-float(Zmax)
-
-            if (B1 > 0) & (B2 < 0):
-                px = Zxy
-            else:
-                px = Zmed
-        else:
-            # Incrementamos el tamaño de
-            # la ventana
-            newwin = newwin+1
-    else:
-        px = Zxy
-
-    return(px, newwin)
-
-
-
 def main(args):
     '''Main'''
 
@@ -140,11 +82,9 @@ def main(args):
 
     for b in [40, 60, 150]:
         noise = np.random.uniform(low=10/255, high=b/255, size=img.shape)
-
         noisy = cv2.normalize((noise + img_norm), None, 0.0, 255.0, cv2.NORM_MINMAX)
         noisy = np.uint8(noisy)
 
-        # noisy = np.uint8(cv2.multiply(noise, img_norm) * 255)
         cv2.imshow(f"Imagen con ruido uniforme - b = {b}", noisy)
         out_file = os.path.join(wd, f"noisy_b{str(b).zfill(3)}.jpg")
         cv2.imwrite(out_file, noisy)
@@ -152,12 +92,32 @@ def main(args):
 
     ########################################################################
     # Filtrado
+    # for i in range(5, 6):
+    i = 5
+    for var_n in [0.001, 0.003, 0.005, 0.01, 0.025, 0.03, 0.4]:
+        def filtro_ruido_local(A):
+            """Codigo entregado en clase"""
+            var_N = var_n  # varianza estimada
+            B = A.flatten()
+            n = len(B)
+            var_L = np.var(B)  # varianza en la mascara
 
-    for b, noisy in noisy_imgs.items():
-        print(f"Filtrando imagen {b}")
-        img = filtro_mediana_adaptiva(noisy)
-        out_file = os.path.join(wd, f"filtered_{str(b).zfill(3)}.jpg")
-        cv2.imwrite(out_file, img)
+            mu = np.mean(B)
+            g = B[np.uint8(n/2)]
+            f = g - (var_N/var_L)*(g-mu)
+            return f
+
+        for b, noisy in noisy_imgs.items():
+            print(f"Filtrando imagen {b}")
+
+            noisy_norm = cv2.normalize(noisy.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
+
+            img = ndi.generic_filter(noisy_norm, filtro_ruido_local, [i, i])
+            img = cv2.normalize(img, None, 0.0, 255.0, cv2.NORM_MINMAX)
+            img = np.uint8(img)
+
+            out_file = os.path.join(wd, f"filtered_{str(b).zfill(3)}_{str(var_n).zfill(5)}.jpg")
+            cv2.imwrite(out_file, img)
 
     cv2.waitKey(0)
 

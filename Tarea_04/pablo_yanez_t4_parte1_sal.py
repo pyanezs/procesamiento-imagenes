@@ -76,17 +76,17 @@ def main(args):
     cv2.imwrite(out_file, noisy)
 
     ########################################################################
-    # # Sal y pimienta para informe
-    # noisy = skimage.util.random_noise(
-    #     img,
-    #     mode='s&p',
-    #     seed=0,
-    #     amount=0.08,
-    #     salt_vs_pepper=0.5)
-    # noisy = np.uint8(noisy * 255)
+    # Sal y pimienta para informe
+    noisy_2 = skimage.util.random_noise(
+        img,
+        mode='s&p',
+        seed=0,
+        amount=0.08,
+        salt_vs_pepper=0.5)
+    noisy_2 = np.uint8(noisy_2 * 255)
 
-    # out_file = os.path.join(wd, "noisy_sp.jpg")
-    # cv2.imwrite(out_file, noisy)
+    out_file = os.path.join(wd, "noisy_sp.jpg")
+    cv2.imwrite(out_file, noisy_2)
 
     ########################################################################
     # Histograma Imagen con Rudio

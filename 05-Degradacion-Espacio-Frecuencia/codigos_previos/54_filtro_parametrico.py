@@ -6,29 +6,29 @@ from matplotlib import cm
 from matplotlib.pyplot import figure, draw, pause
 
 def ruido_movimiento(f,a,b,T):
- 
+
   F =np.fft.fft2(f)   # Espectro
   m,n = F.shape
-  
+
   rx  = np.linspace(-1, 1, m)
   ry  = np.linspace(-1, 1, n)
   U,V = np.meshgrid(rx, rx)
 
   #ecuacion de movimiento
   UV=U*a+V*b
-        
+
   H= T * np.sinc(np.pi*UV)*np.exp(-1j*np.pi*UV)
   H= np.fft.fftshift(H)
 
   #aplicacion del filtro
   FT = H*F
   ft = np.real(np.fft.ifft2(FT))
-  
+
   return ft, H
 
 
 
-img = cv2.imread('cameraman.png')
+img = cv2.imread('Fotos/cameraman.png')
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 gray = cv2.normalize(gray.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
 
@@ -49,13 +49,13 @@ ax = fg.gca()
 h = ax.imshow(noise_image, cmap="gray")  # set initial display dimensions
 
 m= 256
-n= 256 
+n= 256
 G = np.fft.fft2(noise_image)
 
 p=np.array([[0 ,-1 ,0],[ -1, 4, -1],[0, -1, 0]])
 Pp=np.fft.fft2(p,s=[m,n])
 
-vector= np.linspace(1e-8,1e-2, 100)
+vector= np.linspace(1e-8,1e-2, 50)
 for gamma in vector:
     F=(np.conj(H)*G)/(abs(H)**2+gamma*abs(Pp)**2)
     iRestored = np.real(np.fft.ifft2(F))
@@ -64,7 +64,7 @@ for gamma in vector:
     draw()
     pause(1e-1)
 
-   
+
 
 
 #cv2.imshow('Imagen Restaurada', iRestored)
